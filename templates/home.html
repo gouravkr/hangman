@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta name="viewport" content="width=420px, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Hangman</title>
+  </head>
+  <body>
+  <div id="header">
+    <h1>Hangman</h1>
+  </div>
+  <div id="content">
+    <div>
+      {% if status == 'won' %}
+        <h1>Congratulations!</h1>
+        you guessed the word correctly
+      {% elif status == 'lost' %}
+        Uh, oh! You ran out of guesses
+      {% endif %}
+    </div>
+    <br>
+    <div>
+        Your word:<br>
+        <p id="secret">{{string | upper}}</P>
+    </div>
+    <form name="gameform" action="/play" onsubmit="return validateForm()" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="game_id" value="{{id}}"/>
+      <input type="text" 
+        id="letter" name="letter" 
+        maxlength="1" minlength="1"
+        pattern="[A-Za-z]{1}" 
+        title="Please enter a letter" 
+        placeholder="Enter a letter"
+        autofocus 
+      />
+      <span id="guess_type"></span>
+      <span id="blank_error" hidden>Enter a letter</span>
+      <br>
+      <div id="guess_field"></div><br>
+
+      <button type="submit" id="submit" class="button">Submit</button>
+    </form>
+    <button id="reload" onClick="reload();" class="button" hidden>Play again</button>
+    {% if status == 'Started' %}
+        The game has been started. You have 7 Guesses.
+    {% endif %}
+  </div>
+  <script>
+    var inp = document.getElementById("letter")
+    inp.focus()
+
+    if ("{{status}}" == "lost" | "{{status}}" == "won"){
+      elem = document.getElementById('letter')
+      elem.setAttribute("hidden", true)
+      but = document.getElementById("submit")
+      but.setAttribute("hidden", true)
+      rel = document.getElementById("reload")
+      rel.removeAttribute("hidden")
+    }
+    
+    //correct or incorrect guess
+    if ("{{status}}" == "correct"){
+      document.getElementById("guess_type").innerHTML = "&#9989;"
+    } 
+    if ("{{status}}" == "incorrect") {
+      document.getElementById("guess_type").innerHTML = "&#10060;"
+    }
+    if ("{{status}}" == "duplicate") {
+      document.getElementById("guess_type").innerHTML = "Already guessed"
+      document.getElementById("guess_type").style.fontSize = "1em"
+    }
+
+    //remaining guesses
+    var str = "HANGMAN";
+    var res = str.substr(7-{{guesses}}, 7);
+    var hangman_colors = ["#c21c0a" ,"#e0520b" ,"#e0790b" ,"#e0960b" ,"#dbce12" , "#cff016", "#aae80c"]
+    var current_color = hangman_colors[{{guesses}}-1]
+    guess_field = document.getElementById("guess_field")
+    guess_field.innerHTML = res
+    guess_field.style.color = current_color
+
+    function reload(){
+      url = window.location.href
+      window.location.href = url 
+    }
+
+    function validateForm(){
+      var x = document.forms["gameform"]["letter"].value;
+      if (x == "") {
+        document.getElementById("blank_error").removeAttribute("hidden");
+        return false;
+      }
+    }
+  </script>
+</body>
+<style>
+  #content {
+    padding-left: 16px;
+    font-family: Helvetica;
+  }
+  #header {
+    float: left;
+    width: 120%;
+    height: 60px;
+    background: linear-gradient(135deg, #1e5799 0%,#2989d8 26%,#21ce9a 57%,#478457 100%);
+    overflow: hidden;
+    position: relative;
+    margin: -10px -10px 30px -10px;
+    padding: 0px 0px 0px 20px;
+    color: #bfd4bf;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    font-family: Helvetica;
+    vertical-align: middle;
+  }
+  #letter {
+    font-size: 1.5em;
+    height: 32px;
+    padding-left: 6px;
+    border: 1px solid gray;
+    width: 150px;
+  }
+  h1 {
+    margin-top: 10px;
+  }
+  .button {
+    height: 36px;
+    width: 150px;
+    margin: 6px 0px 6px 0px;  
+    font-size: 1.3em;
+    background: #21ce9a;
+    color: white;
+    border:0.1em solid #05034f55;
+    box-sizing: border-box;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
+  }
+  #secret {
+    font-size: 1.4em;
+    margin-top: 10px;
+  }
+  #guess_field {
+    font-size: 1.6em;
+    width: 150px;
+    text-align: right;
+    margin-top: 10px;
+  }
+  #guess_type {
+    font-size: 1.6em;
+  }
+  ::placeholder {
+    color: #ccc;
+  }
+</style>
+</html>
